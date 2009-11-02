@@ -1,0 +1,15 @@
+= Sankey
+
+A small tool which generates Sankey diagrams.
+
+= Dependencies
+
+In order to run it you need to
+
+  gem install rmagick
+
+= License
+
+(C) 2009 Jan Stępień
+
+So far all rights are reserved.
