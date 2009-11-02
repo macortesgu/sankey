@@ -9,16 +9,19 @@ module Sankey::Renderers
 
     Magick::RVG::dpi = 100
 
-    def initialize(data, filename)
+    def initialize(data, filename, args = {})
       throw "data isn't ImageData" unless data.is_a? ImageData
       @vertices = data.vertices
       @width = data.width
       @height = data.height
       @filename = filename
+      @image_width = ((args[:width] || 200)/Magick::RVG::dpi).in
+      @image_height = ((args[:height] || 200)/Magick::RVG::dpi).in
     end
 
     def render
-      rvg = Magick::RVG.new(2.in, 2.in).viewbox(0,0,@width,@height) do |canvas|
+      rvg = Magick::RVG.new(@image_width, @image_height)
+          .viewbox(0, 0, @width, @height) do |canvas|
         canvas.background_fill = 'white'
         canvas.styles :stroke => 'black', :stroke_width => 2, :fill => 'white'
         @vertices.each { |v| draw canvas, v }
