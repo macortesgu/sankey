@@ -3,7 +3,7 @@ require 'point'
 require 'imagedata'
 
 module Sankey
-	class Generator
+  class Generator
     attr_reader :processes, :data
 
     ProcessHeight = 200
@@ -32,7 +32,7 @@ module Sankey
       @data = ImageData.new @vertices, w, h
     end
 
-  private
+    private
 
     def get_max_distances_to_processes(reagent = nil, level = 0)
       if reagent.nil?
@@ -41,7 +41,7 @@ module Sankey
       elsif !reagent.drain.nil?
         new_level = level + 1
         if @max_distances_to_processes[reagent.drain].nil? or
-            @max_distances_to_processes[reagent.drain] < new_level
+          @max_distances_to_processes[reagent.drain] < new_level
           @max_distances_to_processes[reagent.drain] = new_level
         end
         reagent.drain.output.each do |r|
@@ -51,6 +51,7 @@ module Sankey
     end
 
     def draw_process(process)
+      process.check_conservation_of_mass
       @order ||= 0
       layer = @max_distances_to_processes[process] - 1
       corner = Point.new (layer+1)*(ProcessLayerStep+ProcessWidth) + Margin,
@@ -155,5 +156,5 @@ module Sankey
       end
       return w, h
     end
-	end
+  end
 end
