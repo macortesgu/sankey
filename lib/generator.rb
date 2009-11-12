@@ -6,7 +6,6 @@ module Sankey
   class Generator
     attr_reader :processes, :data
 
-    ProcessHeight = 200
     ProcessWidth = 40
     ProcessLayerStep = 100
     ProcessSideStep = 50
@@ -51,16 +50,16 @@ module Sankey
     end
 
     def draw_process(process)
-      process.check_conservation_of_mass
-      @order ||= 0
+      @position ||= 0
       layer = @max_distances_to_processes[process] - 1
+      height = process.total_reagents_mass
       corner = Point.new (layer+1)*(ProcessLayerStep+ProcessWidth) + Margin,
-        @order*(ProcessSideStep+ProcessHeight) + Margin
-      v = ProcessVertex.new corner, corner + [0, ProcessHeight],
-        corner + [ProcessWidth, ProcessHeight], corner + [ProcessWidth, 0]
+        @position + Margin
+      v = ProcessVertex.new corner, corner + [0, height],
+        corner + [ProcessWidth, height], corner + [ProcessWidth, 0]
       @vertices.push v
       @processes_vertices[process] = v
-      @order += 1
+      @position += ProcessSideStep + height
     end
 
     def recursively_draw(reagent)
@@ -79,8 +78,10 @@ module Sankey
     end
 
     def draw_middle_reagent(reagent)
-      left_height = ProcessHeight * reagent.source.fraction(reagent)
-      right_height = ProcessHeight * reagent.drain.fraction(reagent)
+      left_height = reagent.source.total_reagents_mass *
+        reagent.source.fraction(reagent)
+      right_height = reagent.drain.total_reagents_mass *
+        reagent.drain.fraction(reagent)
       [reagent.source, reagent.drain].each do |p|
         draw_process p unless @processes_vertices.include? p
       end
@@ -102,7 +103,7 @@ module Sankey
 
     def draw_input_reagent(reagent)
       draw_process reagent.drain unless @processes_vertices.include? reagent.drain
-      height = ProcessHeight * reagent.drain.fraction(reagent)
+      height = reagent.drain.total_reagents_mass * reagent.drain.fraction(reagent)
       left_corner = Point.new Margin, @input_reagent_offset
       v = Vertex.new
       v.points.push left_corner
@@ -118,7 +119,8 @@ module Sankey
     end
 
     def draw_output_reagent(reagent)
-      height = ProcessHeight * reagent.source.fraction(reagent)
+      height = reagent.source.total_reagents_mass *
+        reagent.source.fraction(reagent)
       @process_output_offset[reagent.source] ||= 0
       left_corner = @processes_vertices[reagent.source].output_edge[:top] +
         [0, @process_output_offset[reagent.source]]
