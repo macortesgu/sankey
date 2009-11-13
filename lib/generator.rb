@@ -107,6 +107,7 @@ module Sankey
       left_corner = Point.new Margin, @input_reagent_offset
       v = Vertex.new
       v.points.push left_corner
+      v.points.push left_corner + [5, height / 2]
       v.points.push left_corner + [0, height]
       @process_input_offset[reagent.drain] ||= 0
       v.points.push @processes_vertices[reagent.drain].input_edge[:top] +
@@ -129,6 +130,8 @@ module Sankey
       v.points.push left_corner + [0, height]
       v.points.push left_corner +
         [ProcessLayerStep, @output_reagent_offset + height]
+      v.points.push left_corner +
+        [ProcessLayerStep + 5, @output_reagent_offset + height / 2]
       v.points.push left_corner +
         [ProcessLayerStep, @output_reagent_offset]
       @vertices.push v
