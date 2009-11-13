@@ -7,39 +7,53 @@ module Sankey::Renderers
     include Renderer
     include Sankey
 
-    Magick::RVG::dpi = 100
-
     def initialize(data, filename, args = {})
       throw "data isn't ImageData" unless data.is_a? ImageData
+      @grid = args[:grid] || false
       @vertices = data.vertices
-      @width = data.width
-      @height = data.height
       @filename = filename
-      @image_width = ((args[:width] || 200)/Magick::RVG::dpi).in
-      @image_height = ((args[:height] || 200)/Magick::RVG::dpi).in
+      @width = args[:width] || data.width
+      @height = args[:height] || data.height
+      @width_ratio = 1.0 * @width / data.width
+      @height_ratio = 1.0 * @height / data.height
     end
 
     def render
-      rvg = Magick::RVG.new(@image_width, @image_height)
-          .viewbox(0, 0, @width, @height) do |canvas|
-        canvas.background_fill = 'white'
-        canvas.styles :stroke => 'black', :stroke_width => 2, :fill => 'white'
-        @vertices.each { |v| draw canvas, v }
-      end
-      rvg.draw.write @filename
+      canvas = Magick::ImageList.new
+      canvas.new_image(@width, @height)
+      draw_grid canvas if @grid
+      @vertices.each { |v| draw_vertex canvas, v }
+      canvas.write @filename
     end
 
   private
 
-    def draw(c, v)
-      arr = []
-      v.points.each do |p|
-        arr.push p.x
-        arr.push p.y
+    def draw_grid(canvas)
+      grid = Magick::Draw.new
+      grid.stroke = 'lightgray'
+      grid.stroke_width = 1
+      0.upto @width/@grid do |x|
+        grid.line x*@grid+@grid-1, 0, x*@grid+@grid-1, @height
       end
-      arr.push v.points.first.x
-      arr.push v.points.first.y
-      c.polyline arr
+      0.upto @height/@grid do |x|
+        grid.line 0, x*@grid+@grid-1, @width, x*@grid+@grid-1
+      end
+      grid.draw canvas
+    end
+
+    def draw_vertex(canvas, v)
+      vertex = Magick::Draw.new
+      vertex.stroke = 'black'
+      vertex.stroke_width = 2
+      first_x = prev_x = v.points.first.x * @width_ratio
+      first_y = prev_y = v.points.first.y * @height_ratio
+      v.points.each do |p|
+        vertex.line prev_x, prev_y, p.x * @width_ratio, p.y * @height_ratio
+        prev_x = p.x * @width_ratio
+        prev_y = p.y * @height_ratio
+      end
+      vertex.line prev_x, prev_y, first_x, first_y
+      vertex.draw canvas
     end
   end
 end
