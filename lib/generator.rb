@@ -26,7 +26,15 @@ module Sankey
       @process_input_offset = {}
       @process_output_offset = {}
       get_max_distances_to_processes
-      input_reagents.each { |r| recursively_draw r }
+      to_be_drawn = []
+      input_reagents.each { |r| to_be_drawn.push r }
+      until to_be_drawn.empty? do
+        STDERR.puts "to draw"
+        to_be_drawn.each { |r| STDERR.puts "  " + r.to_s + " " + r.name }
+        not_drawn = []
+        to_be_drawn.each { |r| not_drawn += recursively_draw r }
+        to_be_drawn = not_drawn.uniq
+      end
       w, h = get_size
       @data = ImageData.new @vertices, w, h
     end
@@ -61,18 +69,43 @@ module Sankey
     end
 
     def recursively_draw(reagent)
-      return if @drawn_reagents.include? reagent
+      return [] if @drawn_reagents.include? reagent
+      STDERR.puts "    drawing " + reagent.name if reagent.name != ""
       if reagent.drain.nil?
-        draw_output_reagent reagent
+        if reagent.source.is_first_in_output_queue reagent
+          draw_output_reagent reagent
+          reagent.source.remove_from_output_queue reagent
+        else
+          STDERR.puts "      later"
+          return [reagent]
+        end
       elsif reagent.source.nil?
-        draw_input_reagent reagent
+        if reagent.drain.is_first_in_input_queue reagent
+          draw_input_reagent reagent
+          reagent.drain.remove_from_input_queue reagent
+        else
+          STDERR.puts "      later"
+          return [reagent]
+        end
       else
-        draw_middle_reagent reagent
+        if reagent.drain.is_first_in_input_queue(reagent) and
+            reagent.source.is_first_in_output_queue(reagent)
+          draw_middle_reagent reagent
+          reagent.source.remove_from_output_queue reagent
+          reagent.drain.remove_from_input_queue reagent
+        else
+          #STDERR.puts reagent.drain.is_first_in_input_queue(reagent)
+          #STDERR.puts reagent.source.is_first_in_output_queue(reagent)
+          STDERR.puts "      later"
+          return [reagent]
+        end
       end
       @drawn_reagents.push reagent
+      to_draw_later = []
       unless reagent.drain.nil?
-        reagent.drain.output.each { |r| recursively_draw r }
+        reagent.drain.output.each { |r| to_draw_later += recursively_draw r }
       end
+      to_draw_later
     end
 
     def draw_middle_reagent(reagent)
