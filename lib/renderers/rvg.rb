@@ -32,11 +32,13 @@ module Sankey::Renderers
       grid = Magick::Draw.new
       grid.stroke = 'lightgray'
       grid.stroke_width = 1
-      0.upto @width/@grid do |x|
-        grid.line x*@grid+@grid-1, 0, x*@grid+@grid-1, @height
+      0.upto @width/@grid/@width_ratio do |x|
+        grid.line @width_ratio*(x*@grid+@grid-1), 0,
+          (x*@grid+@grid-1)*@width_ratio, @height
       end
-      0.upto @height/@grid do |x|
-        grid.line 0, x*@grid+@grid-1, @width, x*@grid+@grid-1
+      0.upto @height/@grid/@height_ratio do |x|
+        grid.line 0, (x*@grid+@grid-1)*@height_ratio, @width,
+          (x*@grid+@grid-1)*@height_ratio
       end
       grid.draw canvas
     end
@@ -44,7 +46,7 @@ module Sankey::Renderers
     def draw_vertex(canvas, v)
       vertex = Magick::Draw.new
       vertex.stroke = 'black'
-      vertex.stroke_width = 2
+      vertex.stroke_width = 1
       first_x = prev_x = v.points.first.x * @width_ratio
       first_y = prev_y = v.points.first.y * @height_ratio
       v.points.each do |p|

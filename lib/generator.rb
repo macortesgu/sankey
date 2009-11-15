@@ -50,16 +50,14 @@ module Sankey
     end
 
     def draw_process(process)
-      @position ||= 0
       layer = @max_distances_to_processes[process] - 1
       height = process.total_reagents_mass
       corner = Point.new (layer+1)*(ProcessLayerStep+ProcessWidth) + Margin,
-        @position + Margin
+        Margin
       v = ProcessVertex.new corner, corner + [0, height],
         corner + [ProcessWidth, height], corner + [ProcessWidth, 0]
       @vertices.push v
       @processes_vertices[process] = v
-      @position += ProcessSideStep + height
     end
 
     def recursively_draw(reagent)
