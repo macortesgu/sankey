@@ -35,11 +35,32 @@ module Sankey
         to_be_drawn.each { |r| not_drawn += recursively_draw r }
         to_be_drawn = not_drawn.uniq
       end
+      make_coordinates_positive
       w, h = get_size
       @data = ImageData.new @vertices, w, h
     end
 
     private
+
+    # Moves all vertices so that there are no negative coordinates.
+    def make_coordinates_positive
+      min_y = @vertices[0].points[0].y
+      min_x = @vertices[0].points[0].x
+      @vertices.each do |v|
+        v.points.each do |p|
+          min_y = [min_y, p.y].min
+          min_x = [min_x, p.x].min
+        end
+      end
+      min_x -= Margin
+      STDERR.puts "Vector: #{-min_x} -#{-min_y}."
+      vector = [-min_x, -min_y]
+      @vertices.each do |v|
+        v.points.map! do |p|
+          p + vector
+        end
+      end
+    end
 
     def get_max_distances_to_processes(reagent = nil, level = 0)
       if reagent.nil?
@@ -135,12 +156,17 @@ module Sankey
     def draw_input_reagent(reagent)
       draw_process reagent.drain unless @processes_vertices.include? reagent.drain
       height = reagent.drain.total_reagents_mass * reagent.drain.fraction(reagent)
-      left_corner = Point.new Margin, @input_reagent_offset
+      @process_input_offset[reagent.drain] ||= 0
       v = Vertex.new
+      if @process_input_offset[reagent.drain] == 0 and reagent.joins_later
+        left_corner = @processes_vertices[reagent.drain].input_edge[:top] +
+          [-ProcessSideStep, -height]
+      else
+        left_corner = Point.new Margin, @input_reagent_offset
+      end
       v.points.push left_corner
       v.points.push left_corner + [5, height / 2]
       v.points.push left_corner + [0, height]
-      @process_input_offset[reagent.drain] ||= 0
       v.points.push @processes_vertices[reagent.drain].input_edge[:top] +
         [0, @process_input_offset[reagent.drain] + height]
       v.points.push @processes_vertices[reagent.drain].input_edge[:top] +

@@ -26,5 +26,15 @@ module Sankey
       process.add_output self, order
       @source= process
     end
+
+    def joins_later
+      drain.input.each do |r|
+        next if r == self
+        if r.source != nil
+          return true
+        end
+      end
+      false
+    end
 	end
 end
