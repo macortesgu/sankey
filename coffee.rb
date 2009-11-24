@@ -4,10 +4,10 @@ require 'renderers/rvg'
 
 g = Sankey::Generator.new
 beans = Sankey::Reagent.new 100
-ground_coffee = Sankey::Reagent.new 200
-water = Sankey::Reagent.new 50
-beverage = Sankey::Reagent.new 300
-crema = Sankey::Reagent.new 50
+ground_coffee = Sankey::Reagent.new 100
+water = Sankey::Reagent.new 200
+beverage = Sankey::Reagent.new 280
+crema = Sankey::Reagent.new 20
 espresso_machine = Sankey::Process.new
 grinder = Sankey::Process.new
 beans.drain = grinder
