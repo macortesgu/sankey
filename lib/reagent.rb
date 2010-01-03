@@ -1,5 +1,5 @@
 module Sankey
-	class Reagent
+  class Reagent
     attr_reader :size, :source, :drain, :name
 
     def initialize(size, name = '')
@@ -36,5 +36,5 @@ module Sankey
       end
       false
     end
-	end
+  end
 end
