@@ -1,4 +1,4 @@
-#!/usr/bin/ruby -Ilib
+#!/usr/bin/ruby -I../lib
 require 'sankey'
 require 'renderers/rvg'
 
