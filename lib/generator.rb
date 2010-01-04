@@ -22,9 +22,10 @@ module Sankey
       @drawn_reagents = []
       @vertices = []
       @input_reagent_offset = Margin
-      @output_reagent_offset = 0
+      @below_next_process_offset = {}
       @process_input_offset = {}
-      @process_output_offset = {}
+      @process_output_left_offset = {}
+      @process_output_right_offset = {}
       get_max_distances_to_processes
       to_be_drawn = []
       input_reagents.each { |r| to_be_drawn.push r }
@@ -87,6 +88,13 @@ module Sankey
         corner + [ProcessWidth, height], corner + [ProcessWidth, 0]
       @vertices.push v
       @processes_vertices[process] = v
+      # Initialize @below_next_process_offset
+      process.input.each do |r|
+        unless r.source.nil?
+          @below_next_process_offset[r.source] = Margin + height
+          break
+        end
+      end
     end
 
     def recursively_draw(reagent)
@@ -138,9 +146,9 @@ module Sankey
         draw_process p unless @processes_vertices.include? p
       end
       @process_input_offset[reagent.drain] ||= 0
-      @process_output_offset[reagent.source] ||= 0
+      @process_output_left_offset[reagent.source] ||= 0
       left_corner = @processes_vertices[reagent.source].output_edge[:top] +
-        [0, @process_output_offset[reagent.source]]
+        [0, @process_output_left_offset[reagent.source]]
       right_corner = @processes_vertices[reagent.drain].input_edge[:top] +
         [0, @process_input_offset[reagent.drain]]
       v = Vertex.new
@@ -150,7 +158,7 @@ module Sankey
       v.points.push right_corner
       @vertices.push v
       @process_input_offset[reagent.drain] += right_height
-      @process_output_offset[reagent.source] += left_height
+      @process_output_left_offset[reagent.source] += left_height
     end
 
     def draw_input_reagent(reagent)
@@ -179,21 +187,24 @@ module Sankey
     def draw_output_reagent(reagent)
       height = reagent.source.total_reagents_mass *
         reagent.source.fraction(reagent)
-      @process_output_offset[reagent.source] ||= 0
+      @process_output_left_offset[reagent.source] ||= 0
+      @process_output_right_offset[reagent.source] ||= 0
+      right_offset = @process_output_right_offset[reagent.source] +
+        (@below_next_process_offset[reagent.source] ||= 0)
       left_corner = @processes_vertices[reagent.source].output_edge[:top] +
-        [0, @process_output_offset[reagent.source]]
+        [0, @process_output_left_offset[reagent.source]]
       v = Vertex.new
       v.points.push left_corner
       v.points.push left_corner + [0, height]
       v.points.push left_corner +
-        [ProcessLayerStep, @output_reagent_offset + height]
+        [ProcessLayerStep, right_offset + height]
       v.points.push left_corner +
-        [ProcessLayerStep + 5, @output_reagent_offset + height / 2]
+        [ProcessLayerStep + 5, right_offset + height / 2]
       v.points.push left_corner +
-        [ProcessLayerStep, @output_reagent_offset]
+        [ProcessLayerStep, right_offset]
       @vertices.push v
-      @process_output_offset[reagent.source] += height
-      @output_reagent_offset += OutputReagentsStep
+      @process_output_left_offset[reagent.source] += height
+      @process_output_right_offset[reagent.source] += height + InputReagentsStep
     end
 
     def input_reagents
