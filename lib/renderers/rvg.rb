@@ -7,7 +7,7 @@ module Sankey::Renderers
     include Renderer
     include Sankey
 
-    def initialize(data, filename, args = {})
+    def initialize(data, filename = nil, args = {})
       throw "data isn't ImageData" unless data.is_a? ImageData
       @grid = args[:grid] || false
       @vertices = data.vertices
@@ -23,7 +23,11 @@ module Sankey::Renderers
       canvas.new_image(@width, @height)
       draw_grid canvas if @grid
       @vertices.each { |v| draw_vertex canvas, v }
-      canvas.write @filename
+      if @filename.nil?
+        return canvas.to_blob { self.format = 'PNG' }
+      else
+        canvas.write @filename
+      end
     end
 
   private
