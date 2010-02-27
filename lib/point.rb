@@ -8,7 +8,7 @@ module Sankey
     end
 
     def +(val)
-      if val.is_a? Array and 2 == val.count
+      if val.is_a? Array and 2 == val.length
         x = val[0]
         y = val[1]
       else
