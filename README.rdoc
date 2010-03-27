@@ -1,6 +1,7 @@
 = Sankey
 
-A small tool which generates Sankey diagrams.
+A small tool which generates Sankey diagrams. See it in action at
+sankey.heroku.com[http://sankey.heroku.com].
 
 = Dependencies
 
