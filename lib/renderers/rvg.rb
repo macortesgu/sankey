@@ -51,14 +51,9 @@ module Sankey::Renderers
       vertex = Magick::Draw.new
       vertex.stroke = 'black'
       vertex.stroke_width = 1
-      first_x = prev_x = v.points.first.x * @width_ratio
-      first_y = prev_y = v.points.first.y * @height_ratio
-      v.points.each do |p|
-        vertex.line prev_x, prev_y, p.x * @width_ratio, p.y * @height_ratio
-        prev_x = p.x * @width_ratio
-        prev_y = p.y * @height_ratio
-      end
-      vertex.line prev_x, prev_y, first_x, first_y
+      vertex.fill = 'lightgray'
+      coords = v.points.map { |p| [p.x * @width_ratio, p.y * @height_ratio] }
+      vertex.polygon *coords.flatten
       vertex.draw canvas
     end
   end
